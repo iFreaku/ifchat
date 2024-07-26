@@ -3,17 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat App</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Chat Application</title>
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-    <div class="chat-container">
-        <div class="chat-box" id="chat-box"></div>
-        <div class="input-container">
-            <input type="text" id="chat-input" placeholder="Type your message here..." />
-            <button id="send-btn">Send</button>
-        </div>
+    <div id="chat">
+        <div id="messages"></div>
+        <input type="text" id="message_input" placeholder="Type a message">
+        <button onclick="sendMessage()">Send</button>
+        <input type="file" id="file_input">
+        <button onclick="uploadFile()">Upload File</button>
     </div>
-    <script src="scripts.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
+    <script>
+        var socket = io();
+
+        socket.on('message', function(data) {
+            var messages = document.getElementById('messages');
+            var message = document.createElement('div');
+            message.textContent = data;
+            messages.appendChild(message);
+        });
+
+        socket.on('file_upload', function(file) {
+            var messages = document.getElementById('messages');
+            var fileElement = document.createElement('div');
+            if (file.mimetype.startsWith('image/')) {
+                var img = document.createElement('img');
+                img.src = 'data:' + file.mimetype + ';base64,' + file.content;
+                fileElement.appendChild(img);
+            } else if (file.mimetype.startsWith('video/')) {
+                var video = document.createElement('video');
+                video.controls = true;
+                video.src = 'data:' + file.mimetype + ';base64,' + file.content;
+                fileElement.appendChild(video);
+            } else {
+                var link = document.createElement('a');
+                link.href = 'data:' + file.mimetype + ';base64,' + file.content;
+                link.download = file.filename;
+                link.textContent = 'Download ' + file.filename;
+                fileElement.appendChild(link);
+            }
+            messages.appendChild(fileElement);
+        });
+
+        function sendMessage() {
+            var input = document.getElementById('message_input');
+            var message = input.value;
+            socket.emit('message', message);
+            input.value = '';
+        }
+
+        function uploadFile() {
+            var fileInput = document.getElementById('file_input');
+            var file = fileInput.files[0];
+            var formData = new FormData();
+            formData.append('file', file);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            }).then(response => {
+                if (response.ok) {
+                    console.log('File uploaded and broadcasted');
+                } else {
+                    console.error('File upload failed');
+                }
+            });
+        }
+    </script>
 </body>
 </html>

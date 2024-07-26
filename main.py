@@ -34,5 +34,5 @@ def upload_file():
         return 'File uploaded and broadcasted', 200
 
 if __name__ == '__main__':
-    app.run(port="0.0.0.0." host=3453)
+    app.run(port="0.0.0.0.", host=3453)
     socketio.run(app, debug=False)

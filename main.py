@@ -2,10 +2,11 @@ import os
 import base64
 from flask import Flask, render_template, request, send_file
 from flask_socketio import SocketIO, emit
+import eventlet
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'
-socketio = SocketIO(app)
+socketio = SocketIO(app, async_mode='eventlet')
 
 @app.route('/')
 def index():
@@ -34,4 +35,4 @@ def upload_file():
         return 'File uploaded and broadcasted', 200
 
 if __name__ == '__main__':
-    socketio.run(app, debug=False, port=3453, host="0.0.0.0.")
+    socketio.run(app, debug=True, host='0.0.0.0', port=3453)
